@@ -43,6 +43,11 @@ CSS = r'''
 .chrow.done .bar i{background:var(--ok)}
 .chrow .cta{font-size:13px;color:var(--accent);display:inline-flex;align-items:center;gap:6px;font-weight:500}
 .chrow .cta svg{width:14px;height:14px}
+.chyt,.allyt{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);text-decoration:none}
+.chyt svg,.allyt svg{width:16px;height:16px;color:var(--amber);flex:0 0 auto}
+.chyt:hover,.allyt:hover{color:var(--accent);text-decoration:underline}
+.chyt{margin:-8px 0 6px 18px;width:max-content}
+.allyt{display:flex;margin-top:6px}
 .home-note{font-size:13px;color:var(--muted);margin:0 0 40px}
 @media (max-width:860px){
  .flow{grid-template-columns:1fr 1fr}
@@ -68,6 +73,8 @@ M.forEach(c=>{let S=null;try{S=JSON.parse(localStorage.getItem('mstat-ch'+c.id+'
 
 
 def build(out):
+    PL = json.loads(rd(here / 'youtube_playlists.json'))
+    YT = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg>'
     chs = []
     for n in range(1, 7):
         d = here / ('ch%d' % n)
@@ -95,12 +102,13 @@ def build(out):
         rows += ('<a class="chrow" href="ch%d/index.html" data-ch="%d"><div class="pic"><img src="ch%d/thumbs/ep1.jpg" alt="" loading="lazy"><span>CH %02d</span></div>'
                  '<div><span class="label">%s</span><h3>%s</h3><p>%s</p><ol>%s</ol></div>'
                  '<div class="go"><div class="pct">0<small>%%</small></div><div class="bar"><i></i></div><span class="cta"><span>開始這一章</span>%s</span></div></a>\n'
+                 '<a class="chyt" href="https://www.youtube.com/playlist?list=%s" target="_blank" rel="noopener">%s第 %d 章播放清單（4 集）</a>\n'
                  % (c['id'], c['id'], c['id'], c['id'], esc(c['eyebrow']), esc(c['title']), esc(c['lede']),
-                    ''.join('<li><span>EP%d</span>%s</li>' % (i + 1, esc(t)) for i, t in enumerate(c['eps'])), ARROW))
+                    ''.join('<li><span>EP%d</span>%s</li>' % (i + 1, esc(t)) for i, t in enumerate(c['eps'])), ARROW, PL[str(c['id'])], YT, c['id']))
     main = ('<main class="wrap" id="chapters" style="padding-top:36px"><div class="home-head"><div><span class="label">課程內容</span><h2>六章目錄</h2></div>'
-            '<p>全站共 24 集短片、%d 個互動工具、48 題自我檢測。每章約需 40 到 60 分鐘，可以分次完成。</p></div>\n<div class="chlist">\n%s</div>\n'
+            '<p>全站共 24 集短片、%d 個互動工具、48 題自我檢測。每章約需 40 到 60 分鐘，可以分次完成。<a class="allyt" href="https://www.youtube.com/playlist?list=%s" target="_blank" rel="noopener">%s在 YouTube 連續播放全部 24 集</a></p></div>\n<div class="chlist">\n%s</div>\n'
             '<p class="home-note">進度與作答只保存在你目前使用的瀏覽器，換一台裝置或清除瀏覽資料後會重新計算。</p></main>\n'
-            '<footer><div class="wrap">體育測驗與統計・國立體育大學・林彥光 老師。短片與網站內容依課堂講義製作，數值都由講義資料重新計算核對。</div></footer>\n' % (nW, rows))
+            '<footer><div class="wrap">體育測驗與統計・國立體育大學・林彥光 老師。短片與網站內容依課堂講義製作，數值都由講義資料重新計算核對。</div></footer>\n' % (nW, PL['all'], YT, rows))
     css = rd(G / 'base.css') + rd(G / 'extra.css') + rd(G / 'theme.css') + rd(G0 / 'intro.css') + CSS
     ijs = rd(G / 'hero.js')
     meta = json.dumps([{k: c[k] for k in ('id', 'nV', 'nSec', 'nQ', 'nHW')} for c in chs])
