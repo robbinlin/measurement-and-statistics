@@ -158,8 +158,13 @@ def build(ch, out, video=True):
                 z.write(d / 'data' / x['file'], 'CH%02d_資料/%s' % (ch, x['file']))
                 fl.append({'ext': x.get('ext') or x['file'].rsplit('.', 1)[-1].upper(), 'label': x['label'], 'file': x['file'], 'path': 'data/' + x['file']})
     eps = json.loads(rd(d / 'episodes.json'))
-    (dst / 'video').mkdir(exist_ok=True)
+    if all(v.get('id') for v in c['videos']):
+        shutil.rmtree(dst / 'video', ignore_errors=True)
+    else:
+        (dst / 'video').mkdir(exist_ok=True)
     for v, e in zip(c['videos'], eps):
+        if v.get('id'):
+            continue
         v['src'] = 'video/%s.mp4' % v['k']
         if video:
             src = list((VIDEO_DIR / ('第%d章' % ch)).glob('第%d章_EP%s_*_720p.mp4' % (ch, v['k'][2:])))

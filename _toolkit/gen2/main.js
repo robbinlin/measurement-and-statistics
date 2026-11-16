@@ -55,23 +55,28 @@ const DLI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wid
 /* ---------- videos ---------- */
 const secs=t=>{const [m,s]=t.split(':').map(Number);return m*60+s;};
 const SEEN='<span class="seen">已觀看</span>';
+const PLAY='<span class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span>';
 function renderVideos(){
   $('#videos').innerHTML=CH.videos.map(v=>{
-    const media=v.id?`<a class="thumb" href="https://youtu.be/${v.id}" target="_blank" rel="noopener" data-video="${v.k}" aria-label="在 YouTube 觀看 ${esc(v.t)}"><img src="thumbs/${v.k}.jpg" alt="" loading="lazy">${S.videos[v.k]?SEEN:''}<span class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span></a>`
+    const media=v.id?`<div class="thumb yt" role="button" tabindex="0" data-ytplay="${v.k}" data-t="0" aria-label="播放 ${esc(v.t)}"><img src="thumbs/${v.k}.jpg" alt="" loading="lazy">${S.videos[v.k]?SEEN:''}${PLAY}</div>`
       :`<div class="thumb vp"><video controls preload="none" playsinline poster="thumbs/${v.k}.jpg" data-vk="${v.k}" aria-label="${esc(v.t)}"><source src="${esc(v.src)}" type="video/mp4"></video>${S.videos[v.k]?SEEN:''}</div>`;
-    const chip=([t,l])=>v.id?`<li><a href="https://youtu.be/${v.id}?t=${secs(t)}" target="_blank" rel="noopener" data-video="${v.k}"><span class="t">${t}</span><span>${esc(l)}</span></a></li>`
-      :`<li><button type="button" data-seek="${v.k}" data-t="${secs(t)}"><span class="t">${t}</span><span>${esc(l)}</span></button></li>`;
-    return `<article class="video" data-card="${v.k}">${media}<div class="body"><h3>${esc(v.t)}</h3><p>${esc(v.d)}</p><ul class="chips">${v.c.map(chip).join('')}</ul></div></article>`;}).join('');
+    const chip=([t,l])=>`<li><button type="button" ${v.id?'data-ytplay':'data-seek'}="${v.k}" data-t="${secs(t)}"><span class="t">${t}</span><span>${esc(l)}</span></button></li>`;
+    return `<article class="video" data-card="${v.k}">${media}<div class="body"><h3>${esc(v.t)}</h3><p>${esc(v.d)}</p><ul class="chips">${v.c.map(chip).join('')}</ul>${v.id?`<a class="ytlink" href="https://youtu.be/${v.id}" target="_blank" rel="noopener">在 YouTube 開啟</a>`:''}</div></article>`;}).join('');
 }
-function markSeen(k){if(S.videos[k])return;S.videos[k]=true;save();const t=$(`[data-card="${k}"] .thumb`);if(t&&!t.querySelector('.seen'))t.insertAdjacentHTML('beforeend',SEEN);progress();if(window.__epSync)window.__epSync();toast('這一集看完了，接著動手試試下面的工具。');}
+function markSeen(k){if(S.videos[k])return;S.videos[k]=true;save();const t=$(`[data-card="${k}"] .thumb`);if(t&&!t.querySelector('.seen'))t.insertAdjacentHTML('beforeend',SEEN);progress();if(window.__epSync)window.__epSync();}
+function ytPlay(k,t){const v=CH.videos.find(x=>x.k===k);const box=$(`[data-card="${k}"] .thumb`);if(!v||!box)return;
+  $$('.thumb.yt iframe').forEach(f=>{const b=f.parentElement;if(b!==box){const kk=b.dataset.ytplay;b.innerHTML=`<img src="thumbs/${kk}.jpg" alt="">${S.videos[kk]?SEEN:''}${PLAY}`;}});
+  box.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0&playsinline=1&start=${t|0}" title="${esc(v.t)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  box.scrollIntoView({block:'nearest',behavior:'smooth'});setTimeout(()=>markSeen(k),3000);}
 document.addEventListener('timeupdate',e=>{const v=e.target;if(v.tagName==='VIDEO'&&v.dataset.vk&&v.duration&&v.currentTime/v.duration>=0.9)markSeen(v.dataset.vk);},true);
 document.addEventListener('ended',e=>{const v=e.target;if(v.tagName==='VIDEO'&&v.dataset.vk)markSeen(v.dataset.vk);},true);
 document.addEventListener('play',e=>{const v=e.target;if(v.tagName==='VIDEO')$$('video[data-vk]').forEach(o=>{if(o!==v)o.pause();});},true);
 document.addEventListener('click',e=>{
+  const y=e.target.closest('[data-ytplay]');if(y){if(y.querySelector('iframe'))return;ytPlay(y.dataset.ytplay,+y.dataset.t);return;}
   const b=e.target.closest('[data-seek]');
-  if(b){const v=$(`video[data-vk="${b.dataset.seek}"]`);if(!v)return;const t=+b.dataset.t;const go=()=>{v.currentTime=t;v.play();};if(v.readyState>=1)go();else{v.addEventListener('loadedmetadata',go,{once:true});v.load();}return;}
-  const a=e.target.closest('a[data-video]');if(a)setTimeout(()=>markSeen(a.dataset.video),400);
+  if(b){const v=$(`video[data-vk="${b.dataset.seek}"]`);if(!v)return;const t=+b.dataset.t;const go=()=>{v.currentTime=t;v.play();};if(v.readyState>=1)go();else{v.addEventListener('loadedmetadata',go,{once:true});v.load();}}
 });
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.thumb.yt')){e.preventDefault();ytPlay(e.target.dataset.ytplay,0);}});
 
 /* ---------- concepts ---------- */
 function renderConcepts(){
