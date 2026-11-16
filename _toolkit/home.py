@@ -9,6 +9,8 @@ esc = lambda s: str(s).replace('&', '&amp;').replace('<', '&lt;').replace('>', '
 ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
 
 CSS = r'''
+#hero{position:absolute;inset:0;width:100%;height:100%;z-index:-1;cursor:pointer;touch-action:manipulation}
+.live{flex-wrap:wrap;gap:14px 26px}
 .intro{--ball:#EDB23F;--curve:#F08BB3;--peg:rgba(226,232,247,.38)}
 .intro::after{background:radial-gradient(120% 90% at 78% 40%,rgba(237,178,63,.10),transparent 60%),radial-gradient(80% 60% at 10% 100%,rgba(214,69,127,.10),transparent 60%)}
 .intro h1 .t2{background:linear-gradient(100deg,var(--band-ink) 0%,var(--band-ink) 55%,var(--ball) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -75,15 +77,15 @@ def build(out):
                     'nV': len(c['videos']), 'nSec': len(re.findall(r'^## ', guide, re.M)), 'nQ': len(c['quiz']), 'nHW': len(c['hw']['questions']),
                     'nW': sum(1 for w in c['widgets'] if w)})
     nW = sum(c['nW'] for c in chs)
-    intro = ('<section class="intro" id="top" aria-labelledby="intro-title">\n <canvas id="galton" aria-hidden="true"></canvas>\n'
+    intro = ('<section class="intro" id="top" aria-labelledby="intro-title">\n <canvas id="hero" aria-hidden="true"></canvas>\n'
              ' <div class="wrap top intro-top"><div class="brand"><span class="brand-mark">Measurement &amp; Statistics</span><span><strong>體育測驗與統計</strong><small>國立體育大學・林彥光 老師</small></span></div><a class="top-link" href="#chapters">6 章目錄</a></div>\n'
              ' <div class="wrap intro-body">\n  <div class="intro-text">\n'
              '   <span class="label rv" style="--d:0">大學部課程 · 6 章 · 24 集單線插畫短片</span>\n'
              '   <h1 id="intro-title" class="rv" style="--d:1"><span class="t1">體育</span><span class="t2">測驗與統計</span></h1>\n'
              '   <p class="sub rv" style="--d:2">一個成績到底算好還是不好？這門課從測驗、測量、評價的差別談起，一路走到信度與效度。每章四集兩分鐘短片，配上可以動手玩的統計工具、講義、動手算的步驟，還有即時回饋的檢測與作業。</p>\n'
              '   <div class="cta rv" style="--d:3"><a class="btn primary" href="ch1/index.html">從第 1 章開始 ' + ARROW + '</a><a class="btn ghost" href="#chapters">瀏覽 6 章</a></div>\n'
-             '   <div class="live rv" style="--d:4" aria-live="off">\n    <div><span>已落下 n</span><b id="gN">0</b></div><div><span>平均 x̄</span><b id="gM">—</b></div><div><span>標準差 s</span><b id="gS">—</b></div>\n   </div>\n'
-             '   <p class="cap rv" style="--d:5">高爾頓板：每顆球碰到釘子時往左往右各一半機會，12 排之後的落點平均是 6、標準差約 1.732。球愈多，長條愈貼近粉紅色的常態曲線，這條曲線第 3 章會學到。<span class="hint">點一下畫面，倒入 50 顆球。</span></p>\n'
+             '   <div class="live rv" style="--d:4" aria-live="off">\n    <div><span>已測人數 n</span><b id="gN">0</b></div><div><span>平均 x̄（秒）</span><b id="gM">—</b></div><div><span>標準差 s</span><b id="gS">—</b></div><div><span>達標比例</span><b id="gP">—</b></div>\n   </div>\n'
+             '   <p class="cap rv" style="--d:5">每位跑者衝過終點，碼錶量到一個秒數，這是測量。秒數一顆顆堆起來，就看得出平均數、標準差和分配的形狀，這是統計。再畫一條 12.5 秒的標準線，才知道誰達標，這是評價。秒數是電腦模擬的示意資料。<span class="hint">點一下畫面，再派 20 位跑者上場。</span></p>\n'
              '  </div>\n </div>\n <a class="scroll-cue" href="#chapters" aria-label="往下看 6 章目錄"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></a>\n</section>\n')
     flow = ('<div class="band"><div class="wrap flowband"><ol class="flow">'
             '<li><b>看一集短片</b>兩分鐘，一個情境帶出一個概念</li><li><b>玩一個工具</b>拖一拖、改一改，驗證影片的說法</li>'
@@ -100,10 +102,7 @@ def build(out):
             '<p class="home-note">進度與作答只保存在你目前使用的瀏覽器，換一台裝置或清除瀏覽資料後會重新計算。</p></main>\n'
             '<footer><div class="wrap">體育測驗與統計・國立體育大學・林彥光 老師。短片與網站內容依課堂講義製作，數值都由講義資料重新計算核對。</div></footer>\n' % (nW, rows))
     css = rd(G / 'base.css') + rd(G / 'extra.css') + rd(G / 'theme.css') + rd(G0 / 'intro.css') + CSS
-    ijs = rd(G0 / 'intro.js')
-    for a, b in [("'#5CC9CE'", "'#EDB23F'"), ("'#F0A24A'", "'#F08BB3'"), ('rgba(240,162,74,', 'rgba(240,139,179,'), ('rgba(92,201,206,', 'rgba(237,178,63,'), ('rgba(232,241,238,', 'rgba(226,232,247,')]:
-        assert a in ijs, a
-        ijs = ijs.replace(a, b)
+    ijs = rd(G / 'hero.js')
     meta = json.dumps([{k: c[k] for k in ('id', 'nV', 'nSec', 'nQ', 'nHW')} for c in chs])
     html = ('<!doctype html>\n<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
             '<title>體育測驗與統計</title>\n<meta name="description" content="國立體育大學「體育測驗與統計」自學網站：六章、24 集短片、互動統計工具、講義、檢測與作業。">\n'
