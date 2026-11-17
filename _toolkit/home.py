@@ -76,7 +76,8 @@ def build(out):
     PL = json.loads(rd(here / 'youtube_playlists.json'))
     YT = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg>'
     chs = []
-    for n in range(1, 7):
+    import build_site
+    for n in build_site.CHS:
         d = here / ('ch%d' % n)
         c = json.loads(rd(d / 'content.json'))
         guide = rd(d / 'guide.md')
@@ -84,16 +85,17 @@ def build(out):
                     'nV': len(c['videos']), 'nSec': len(re.findall(r'^## ', guide, re.M)), 'nQ': len(c['quiz']), 'nHW': len(c['hw']['questions']),
                     'nW': sum(1 for w in c['widgets'] if w)})
     nW = sum(c['nW'] for c in chs)
+    NCHS, NEP, NQ = len(chs), sum(c['nV'] for c in chs), sum(c['nQ'] for c in chs)
     intro = ('<section class="intro" id="top" aria-labelledby="intro-title">\n <canvas id="hero" aria-hidden="true"></canvas>\n'
-             ' <div class="wrap top intro-top"><div class="brand"><span class="brand-mark">Measurement &amp; Statistics</span><span><strong>體育測驗與統計</strong><small>國立體育大學・林彥光 老師</small></span></div><a class="top-link" href="#chapters">6 章目錄</a></div>\n'
+             ' <div class="wrap top intro-top"><div class="brand"><span class="brand-mark">Measurement &amp; Statistics</span><span><strong>體育測驗與統計</strong><small>國立體育大學・林彥光 老師</small></span></div><a class="top-link" href="#chapters">%d 章目錄</a>' % NCHS + '</div>\n'
              ' <div class="wrap intro-body">\n  <div class="intro-text">\n'
-             '   <span class="label rv" style="--d:0">大學部課程 · 6 章 · 24 集單線插畫短片</span>\n'
+             '   <span class="label rv" style="--d:0">大學部課程 · %d 章 · %d 集單線插畫短片</span>' % (NCHS, NEP) + '\n'
              '   <h1 id="intro-title" class="rv" style="--d:1"><span class="t1">體育</span><span class="t2">測驗與統計</span></h1>\n'
              '   <p class="sub rv" style="--d:2">一個成績到底算好還是不好？這門課從測驗、測量、評價的差別談起，一路走到信度與效度。每章四集兩分鐘短片，配上可以動手玩的統計工具、講義、動手算的步驟，還有即時回饋的檢測與作業。</p>\n'
-             '   <div class="cta rv" style="--d:3"><a class="btn primary" href="ch1/index.html">從第 1 章開始 ' + ARROW + '</a><a class="btn ghost" href="#chapters">瀏覽 6 章</a></div>\n'
+             '   <div class="cta rv" style="--d:3"><a class="btn primary" href="ch1/index.html">從第 1 章開始 ' + ARROW + '</a><a class="btn ghost" href="#chapters">瀏覽 %d 章</a>' % NCHS + '</div>\n'
              '   <div class="live rv" style="--d:4" aria-live="off">\n    <div><span>已測人數 n</span><b id="gN">0</b></div><div><span>平均 x̄（秒）</span><b id="gM">—</b></div><div><span>標準差 s</span><b id="gS">—</b></div><div><span>達標比例</span><b id="gP">—</b></div>\n   </div>\n'
              '   <p class="cap rv" style="--d:5">每位跑者衝過終點，碼錶量到一個秒數，這是測量。秒數一顆顆堆起來，就看得出平均數、標準差和分配的形狀，這是統計。再畫一條 12.5 秒的標準線，才知道誰達標，這是評價。秒數是電腦模擬的示意資料。<span class="hint">點一下畫面，再派 20 位跑者上場。</span></p>\n'
-             '  </div>\n </div>\n <a class="scroll-cue" href="#chapters" aria-label="往下看 6 章目錄"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></a>\n</section>\n')
+             '  </div>\n </div>\n <a class="scroll-cue" href="#chapters" aria-label="往下看章節目錄"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></a>\n</section>\n')
     flow = ('<div class="band"><div class="wrap flowband"><ol class="flow">'
             '<li><b>看一集短片</b>兩分鐘，一個情境帶出一個概念</li><li><b>玩一個工具</b>拖一拖、改一改，驗證影片的說法</li>'
             '<li><b>翻講義</b>老師上課用的投影片，可下載</li><li><b>動手算</b>用講義的資料自己算一遍</li><li><b>檢測與作業</b>選完立刻知道對錯和理由</li></ol></div></div>\n')
@@ -105,15 +107,15 @@ def build(out):
                  '<a class="chyt" href="https://www.youtube.com/playlist?list=%s" target="_blank" rel="noopener">%s第 %d 章播放清單（4 集）</a>\n'
                  % (c['id'], c['id'], c['id'], c['id'], esc(c['eyebrow']), esc(c['title']), esc(c['lede']),
                     ''.join('<li><span>EP%d</span>%s</li>' % (i + 1, esc(t)) for i, t in enumerate(c['eps'])), ARROW, PL[str(c['id'])], YT, c['id']))
-    main = ('<main class="wrap" id="chapters" style="padding-top:36px"><div class="home-head"><div><span class="label">課程內容</span><h2>六章目錄</h2></div>'
-            '<p>全站共 24 集短片、%d 個互動工具、48 題自我檢測。每章約需 40 到 60 分鐘，可以分次完成。<a class="allyt" href="https://www.youtube.com/playlist?list=%s" target="_blank" rel="noopener">%s在 YouTube 連續播放全部 24 集</a></p></div>\n<div class="chlist">\n%s</div>\n'
+    main = ('<main class="wrap" id="chapters" style="padding-top:36px"><div class="home-head"><div><span class="label">課程內容</span><h2>%d 章目錄</h2></div>'
+            '<p>全站共 %d 集短片、%d 個互動工具、%d 題自我檢測。每章約需 40 到 60 分鐘，可以分次完成。<a class="allyt" href="https://www.youtube.com/playlist?list=%s" target="_blank" rel="noopener">%s在 YouTube 連續播放全部 %d 集</a></p></div>\n<div class="chlist">\n%s</div>\n'
             '<p class="home-note">進度與作答只保存在你目前使用的瀏覽器，換一台裝置或清除瀏覽資料後會重新計算。</p></main>\n'
-            '<footer><div class="wrap">體育測驗與統計・國立體育大學・林彥光 老師。短片與網站內容依課堂講義製作，數值都由講義資料重新計算核對。</div></footer>\n' % (nW, PL['all'], YT, rows))
+            '<footer><div class="wrap">體育測驗與統計・國立體育大學・林彥光 老師。短片與網站內容依課堂講義製作，數值都由講義資料重新計算核對。</div></footer>\n' % (NCHS, NEP, nW, NQ, PL['all'], YT, NEP, rows))
     css = rd(G / 'base.css') + rd(G / 'extra.css') + rd(G / 'theme.css') + rd(G0 / 'intro.css') + CSS
     ijs = rd(G / 'hero.js')
     meta = json.dumps([{k: c[k] for k in ('id', 'nV', 'nSec', 'nQ', 'nHW')} for c in chs])
     html = ('<!doctype html>\n<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
-            '<title>體育測驗與統計</title>\n<meta name="description" content="國立體育大學「體育測驗與統計」自學網站：六章、24 集短片、互動統計工具、講義、檢測與作業。">\n'
+            '<title>體育測驗與統計</title>\n<meta name="description" content="國立體育大學「體育測驗與統計」自學網站：十二章、48 集短片、互動統計工具、講義、檢測與作業。">\n'
             '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">\n'
             '<style>\nbody{margin:0}img{max-width:100%}[hidden]{display:none!important}\n' + css + '</style></head>\n<body>\n' + intro + flow + main +

@@ -9,12 +9,28 @@ from pathlib import Path
 
 here = Path(__file__).resolve().parent
 G = here / 'gen2'
-NCH = 6
+ALL = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13]
+CHS = [n for n in ALL if (here / ('ch%d' % n) / 'content.json').exists()]
 VIDEO_DIR = Path(r'F:\Dropbox\claude-體育測驗與統計\動畫短片\成品_單線插畫風')
-DECK = {1: '(一)體育測驗與統計概念', 2: '(二)測驗與評量的應用技術', 3: '(三)描述統計與常態分布', 4: '(四)相關和預測', 5: '(五)推論統計', 6: '(六)信度與效度的理論'}
+DECK = {1: '(一)體育測驗與統計概念', 2: '(二)測驗與評量的應用技術', 3: '(三)描述統計與常態分布', 4: '(四)相關和預測', 5: '(五)推論統計', 6: '(六)信度與效度的理論',
+        7: '(七)效標參照的信度與效度', 8: '(八)編製紙筆測驗與調查', 9: '(九)測量情意的行為', 10: '(十)評分', 12: '(十二)競技與健身運動的心理測量', 13: '(十三)課室評等'}
 SIMP = '这为个们说对时会过还没关东车马门问间见长书页话语读写点线图样数据标应该计观测验术机实际现发开动种类显检变级从两么参与无专业习学号际项题选择错误确认论证质量预设范围单双历届组织统总结绩评价'.replace('量','').replace('范','')
 SIMP = ''.join(ch for ch in SIMP if ch not in '錯誤確認')
 rd = lambda p: Path(p).read_text(encoding='utf-8')
+
+
+def rmtree(d):
+    """Dropbox 同步時會暫時鎖住資料夾，重試幾次。"""
+    import time
+    for i in range(20):
+        try:
+            shutil.rmtree(d)
+            return
+        except FileNotFoundError:
+            return
+        except PermissionError:
+            time.sleep(1.5)
+    shutil.rmtree(d)
 
 
 def check(ch, c, guide, wjs, files):
@@ -141,7 +157,7 @@ def build(ch, out, video=True):
     dst = out / ('ch%d' % ch)
     for sub in ['slides', 'thumbs', 'data', 'img']:
         if (dst / sub).exists():
-            shutil.rmtree(dst / sub)
+            rmtree(dst / sub)
     (dst / 'slides').mkdir(parents=True)
     slides = sorted((d / 'slides').glob('s-*.jpg'))
     for f in slides + [d / 'slides' / 'deck.pdf', d / 'slides' / 'deck.pptx']:
@@ -174,10 +190,10 @@ def build(ch, out, video=True):
                     shutil.copyfile(src[0], t)
             else:
                 print('  [ch%d] 找不到影片 %s' % (ch, v['k']))
-    nav = {str(i): '../ch%d/index.html' % i for i in range(1, NCH + 1)}
+    nav = {str(i): '../ch%d/index.html' % i for i in CHS}
     nav['home'] = '../index.html'
     c.update({'slidesN': len(slides), 'deckName': DECK[ch], 'guide': guide, 'files': fl, 'zip': 'data/all.zip' if fl else None,
-              'nav': nav, 'static': True, 'pptxPath': 'slides/deck.pptx', 'nCh': NCH})
+              'nav': nav, 'static': True, 'pptxPath': 'slides/deck.pptx', 'chs': CHS})
     (dst / 'index.html').write_text(page(c, wjs), encoding='utf-8', newline='\n')
     print('ch%d 建置完成：%d 張投影片、%d 個概念、%d 個工具、%d 個資料檔%s' % (ch, len(slides), len(c['concepts']), sum(1 for w in c['widgets'] if w), len(fl), '；檢查有 %d 個問題' % len(probs) if probs else '；檢查通過'))
     return not probs
@@ -188,7 +204,7 @@ if __name__ == '__main__':
     out = Path(args[0]).resolve()
     out.mkdir(parents=True, exist_ok=True)
     (out / '.nojekyll').write_text('')
-    chs = [int(a) for a in args[1:]] or list(range(1, NCH + 1))
+    chs = [int(a) for a in args[1:]] or CHS
     ok = all([build(ch, out, '--no-video' not in sys.argv) for ch in chs])
     if len(args) == 1 and (here / 'home.py').exists():
         import home

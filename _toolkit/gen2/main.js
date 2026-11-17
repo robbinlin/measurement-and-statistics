@@ -6,10 +6,10 @@ const nImg=(CH.guide.match(/!\[/g)||[]).length;
 $('#hFacts').innerHTML=[[CH.videos.length,'集短片'],[CH.widgets.filter(Boolean).length,'個互動工具'],[CH.slidesN,'張投影片'],[CH.quiz.length,'題自我檢測'],[CH.hw.questions.length,'題作業']].filter(Boolean).map(([n,l])=>`<span><b>${n}</b> ${l}</span>`).join('');
 const NAV=CH.nav||{};
 const TGT=CH.static?'':' target="_blank" rel="noopener"';
-$('#chapnav').innerHTML=(NAV.home?`<a class="home" href="${esc(NAV.home)}"${TGT}>課程首頁</a>`:'')+Array.from({length:CH.nCh},(_,k)=>k+1).map(i=>i===CH.id?`<span class="cur" aria-current="page">CH${pad2(i)}</span>`:NAV[i]?`<a href="${esc(NAV[i])}"${TGT}>CH${pad2(i)}</a>`:`<span>CH${pad2(i)}</span>`).join('');
+$('#chapnav').innerHTML=(NAV.home?`<a class="home" href="${esc(NAV.home)}"${TGT}>課程首頁</a>`:'')+CH.chs.map(i=>i===CH.id?`<span class="cur" aria-current="page">CH${pad2(i)}</span>`:NAV[i]?`<a href="${esc(NAV[i])}"${TGT}>CH${pad2(i)}</a>`:`<span>CH${pad2(i)}</span>`).join('');
 document.title='體育測驗與統計 第 '+CH.id+' 章 '+CH.title;
 $('#footText').textContent=`體育測驗與統計・第 ${CH.id} 章。內容依本章講義與短片製作，數值都重新計算核對過。進度與作答只保存在你目前使用的瀏覽器。`;
-const nxt=CH.id<CH.nCh&&NAV[CH.id+1];$('#nextCh').innerHTML=nxt?`<a class="btn primary" href="${esc(nxt)}"${TGT}>下一章：第 ${CH.id+1} 章</a>`:'<a class="btn" href="#learn">回到影片與概念</a>';
+const NXT=CH.chs[CH.chs.indexOf(CH.id)+1];const nxt=NXT&&NAV[NXT];$('#nextCh').innerHTML=nxt?`<a class="btn primary" href="${esc(nxt)}"${TGT}>下一章：第 ${NXT} 章</a>`:'<a class="btn" href="#learn">回到影片與概念</a>';
 
 /* ---------- stages / router ---------- */
 const ST3=CH.stage3;

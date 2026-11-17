@@ -37,11 +37,11 @@ wr('body.html', b)
 m = rd('main.js')
 m = rep(m, "[CH.videos.length,'集動畫'],[CH.slidesN,'張投影片'],nImg?[nImg,'張 SPSS 截圖']:null,",
         "[CH.videos.length,'集短片'],[CH.widgets.filter(Boolean).length,'個互動工具'],[CH.slidesN,'張投影片'],")
-m = rep(m, '[1,2,3,4,5,6,7,8].map(i=>i===CH.id?', 'Array.from({length:CH.nCh},(_,k)=>k+1).map(i=>i===CH.id?')
+m = rep(m, '[1,2,3,4,5,6,7,8].map(i=>i===CH.id?', 'CH.chs.map(i=>i===CH.id?')
 m = rep(m, "document.title='高等體育統計 第'+CH.id+'章';", "document.title='體育測驗與統計 第 '+CH.id+' 章 '+CH.title;")
 m = rep(m, '`高等體育統計・第 ${CH.id} 章。數值核對自本章講義與 SPSS 指南之實際輸出。進度與作答只保存在你目前使用的瀏覽器。`',
         '`體育測驗與統計・第 ${CH.id} 章。內容依本章講義與短片製作，數值都重新計算核對過。進度與作答只保存在你目前使用的瀏覽器。`')
-m = rep(m, 'const nxt=CH.id<8&&NAV[CH.id+1];', 'const nxt=CH.id<CH.nCh&&NAV[CH.id+1];')
+m = rep(m, 'const nxt=CH.id<8&&NAV[CH.id+1];', 'const NXT=CH.chs[CH.chs.indexOf(CH.id)+1];const nxt=NXT&&NAV[NXT];')
 m = rep(m, "const isSpss=CH.guideType==='spss';\nconst STAGES=[['learn','影片與概念'],['slides','投影片'],['spss',isSpss?'SPSS 操作':'計算核對'],",
         "const ST3=CH.stage3;\nconst STAGES=[['learn','影片與概念'],['slides','投影片'],['spss',ST3.tab],")
 i, j = m.index('/* ---------- videos ---------- */'), m.index('/* ---------- concepts ---------- */')
@@ -86,6 +86,7 @@ m = rep(m, "(restC||'SPSS 操作畫面')", "(restC||'操作畫面')")
 # 數值題接受全形負號與全形數字的減號
 assert m.count(".replace(/,/g,'').replace(/%$/,'')") == 2
 m = m.replace(".replace(/,/g,'').replace(/%$/,'')", ".replace(/,/g,'').replace(/[−－]/g,'-').replace(/%$/,'')")
+m = rep(m, '下一章：第 ${CH.id+1} 章', '下一章：第 ${NXT} 章')
 assert 'isSpss' not in m and '高等' not in m, [x for x in ('isSpss', '高等') if x in m]
 BOOT = 'renderVideos();renderConcepts();renderSlides();renderFiles();renderGuide();renderQuiz();renderHW();'
 TAIL = 'route();progress();'
